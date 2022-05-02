@@ -17,18 +17,11 @@
 * Header-Files
 *******************************************************************************/
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include <exec/memory.h>
-#include <libraries/gadtools.h>
 #include <libraries/mui.h>
-
-#include <exec/ports.h>
-
-#include <pragma/diskfont_lib.h>
 #include <proto/exec.h>
-#include <pragma/graphics_lib.h>
+
 #include <pragma/muimaster_lib.h>
 #include <pragma/commodities_lib.h>
 
