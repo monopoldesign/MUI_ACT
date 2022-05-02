@@ -55,6 +55,7 @@ struct ObjApp
 *******************************************************************************/
 struct IntuitionBase *IntuitionBase;
 struct Library *MUIMasterBase;
+struct Library *CxBase;
 
 char buffer[40];
 struct ObjApp *App = NULL; /* Object */
@@ -112,9 +113,18 @@ void init(void)
 		printf("Can't Open Intuition Library\n");
 		exit(20);
 	}
+
 	if (!(MUIMasterBase = OpenLibrary(MUIMASTER_NAME, MUIMASTER_VMIN)))
 	{
 		printf("Can't Open MUIMaster Library\n");
+		CloseLibrary((struct Library *)IntuitionBase);
+		exit(20);
+	}
+
+	if (!(CxBase = OpenLibrary("commodities.library", 37)))
+	{
+		printf("Can't Open Commodities Library\n");
+		CloseLibrary((struct Library *)MUIMasterBase);
 		CloseLibrary((struct Library *)IntuitionBase);
 		exit(20);
 	}
@@ -125,7 +135,8 @@ void init(void)
 ------------------------------------------------------------------------------*/
 void end(void)
 {
-	CloseLibrary(MUIMasterBase);
+	CloseLibrary((struct Library *)CxBase);
+	CloseLibrary((struct Library *)MUIMasterBase);
 	CloseLibrary((struct Library *)IntuitionBase);
 	exit(20);
 }
