@@ -171,7 +171,6 @@ struct ObjApp *CreateApp(void)
 		SubWindow, ObjectApp->WI_label_0,
 	End;
 
-
 	if (!ObjectApp->App)
 	{
 		FreeVec(ObjectApp);
