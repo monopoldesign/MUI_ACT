@@ -17,6 +17,7 @@
 * Header-Files
 *******************************************************************************/
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <exec/memory.h>
 #include <libraries/mui.h>
@@ -24,11 +25,15 @@
 
 #include <pragma/muimaster_lib.h>
 #include <pragma/commodities_lib.h>
+#include <pragma/rexxsyslib_lib.h>
 
 /******************************************************************************
 * Prototypes
 *******************************************************************************/
 ULONG HotKeyFunc(register __a0 struct Hook *hook, register __a2 Object *obj, register __a1 CxMsg *cmsg);
+ULONG arexxFName(register __a2 Object *obj, register __a1  char **msg);
+ULONG arexxDelay(register __a2 Object *obj, register __a1 char **msg);
+
 void init(void);
 void end(void);
 struct ObjApp *CreateApp(void);
@@ -38,6 +43,8 @@ void DisposeApp(struct ObjApp *ObjectApp);
 * Definitions
 *******************************************************************************/
 #define MAKE_ID(a, b, c, d) ((ULONG)(a) << 24 | (ULONG)(b) << 16 | (ULONG)(c) << 8 | (ULONG)(d))
+
+enum ID {ID_ARexx = 1};
 
 struct ObjApp
 {
@@ -63,10 +70,25 @@ struct Hook hotkey_hook = {{NULL, NULL}, (HOOKFUNC)HotKeyFunc, NULL, NULL};
 CxObj *broker, *filter, *sender, *translate;
 struct MsgPort *broker_mp;
 
+struct Hook hook_fname = {{NULL, NULL}, (HOOKFUNC)arexxFName, NULL, NULL};
+struct Hook hook_delay = {{NULL, NULL}, (HOOKFUNC)arexxDelay, NULL, NULL};
+
+struct MUI_Command rexxCommands[] =
+{
+	{"test",	MC_TEMPLATE_ID,	ID_ARexx,	NULL},
+	{"fname",	"NAME/A",		1,			&hook_fname},
+	{"delay",	"DELAY/A",		1,			&hook_delay},
+	{NULL,		NULL, 			NULL,		NULL}
+};
+
 /******************************************************************************
 * Main-Program
 *******************************************************************************/
 
+/*-----------------------------------------------------------------------------
+- HotKeyFunc()
+- Function for Hotkey-Commodity-Hook
+------------------------------------------------------------------------------*/
 ULONG HotKeyFunc(register __a0 struct Hook *hook, register __a2 Object *obj, register __a1 CxMsg *cmsg)
 {
 	ULONG cmsgid, cmsgtype;
@@ -116,6 +138,34 @@ ULONG HotKeyFunc(register __a0 struct Hook *hook, register __a2 Object *obj, reg
 };
 
 /*-----------------------------------------------------------------------------
+- arexxFName()
+- Function for "fname"-ARexx-Hook
+------------------------------------------------------------------------------*/
+ULONG arexxFName(register __a2 Object *obj, register __a1 char **msg)
+{
+	char *data = (char *)msg[0];
+
+	DisplayBeep(NULL);
+	printf("We got an incoming fname-command, value = %s\n", data);
+
+	return 0;
+}
+
+/*-----------------------------------------------------------------------------
+- arexxDelay()
+- Function for "delay"-ARexx-Hook
+------------------------------------------------------------------------------*/
+ULONG arexxDelay(register __a2 Object *obj, register __a1 char **msg)
+{
+	unsigned int ndata = (unsigned int)atoi(msg[0]);
+
+	DisplayBeep(NULL);
+	printf("We got an incoming delay-command, value = %ld\n", ndata);
+
+	return 0;
+}
+
+/*-----------------------------------------------------------------------------
 - main()
 ------------------------------------------------------------------------------*/
 int main(int argc, char *argv[])
@@ -155,6 +205,11 @@ int main(int argc, char *argv[])
 			case MUIV_Application_ReturnID_Quit:
 				if ((MUI_RequestA(App->App, 0, 0, "Quit?", "_Yes|_No", "\33cAre you sure?", 0)) == 1)
 					running = FALSE;
+				break;
+
+			case ID_ARexx:
+				DisplayBeep(NULL);
+				printf("A simple ARexx-Command \"test\" received\n");
 				break;
 
 			default:
@@ -240,12 +295,13 @@ struct ObjApp *CreateApp(void)
 
 	ObjectApp->App = ApplicationObject,
 		MUIA_Application_Author,		"M.Volkel",
-		MUIA_Application_Base,			"AppBase",
+		MUIA_Application_Base,			"MUIACT",	// Arexx-Port: "MUIACT.1"
 		MUIA_Application_Title,			"MUI-ACT",
 		MUIA_Application_Version,		"$VER: MUI-ACT V0.1",
 		MUIA_Application_Copyright,		"(C)2022 M.Volkel)",
 		MUIA_Application_Description,	"Testing MUI-ARexx/Commodity-Functions",
 		MUIA_Application_BrokerHook,	&hotkey_hook,
+		MUIA_Application_Commands,		&rexxCommands,
 		SubWindow,						ObjectApp->WI_label_0,
 	End;
 
