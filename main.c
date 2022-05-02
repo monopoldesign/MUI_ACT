@@ -141,7 +141,7 @@ struct ObjApp *CreateApp(void)
 	if (!(ObjectApp = AllocVec(sizeof(struct ObjApp),MEMF_CLEAR)))
 		return(NULL);
 
-	ObjectApp->STR_TX_label_0 = "This is just a Test for the MUI ARexx/Commodity-Functionality";
+	ObjectApp->STR_TX_label_0 = "This is just a Test for the MUI-ARexx/Commodity-Functionality";
 
 	ObjectApp->TX_label_0 = TextObject,
 		MUIA_Background, MUII_TextBack,
