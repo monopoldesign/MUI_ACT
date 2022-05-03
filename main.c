@@ -33,6 +33,7 @@
 ULONG HotKeyFunc(register __a0 struct Hook *hook, register __a2 Object *obj, register __a1 CxMsg *cmsg);
 ULONG arexxFName(register __a2 Object *obj, register __a1  char **msg);
 ULONG arexxDelay(register __a2 Object *obj, register __a1 char **msg);
+ULONG ButtonFunc(register __a2 Object *obj, register __a1 int *msg);
 
 void init(void);
 void end(void);
@@ -45,12 +46,15 @@ void DisposeApp(struct ObjApp *ObjectApp);
 #define MAKE_ID(a, b, c, d) ((ULONG)(a) << 24 | (ULONG)(b) << 16 | (ULONG)(c) << 8 | (ULONG)(d))
 
 enum ID {ID_ARexx = 1};
+enum BUTID {ID_BT0, ID_BT1};
 
 struct ObjApp
 {
 	APTR	App;
 	APTR	WI_label_0;
 	APTR	TX_label_0;
+	APTR	BT_label_0;
+	APTR	BT_label_1;
 	char *	STR_TX_label_0;
 };
 
@@ -72,6 +76,8 @@ struct MsgPort *broker_mp;
 
 struct Hook hook_fname = {{NULL, NULL}, (HOOKFUNC)arexxFName, NULL, NULL};
 struct Hook hook_delay = {{NULL, NULL}, (HOOKFUNC)arexxDelay, NULL, NULL};
+
+struct Hook hook_button = {{NULL, NULL}, (HOOKFUNC)ButtonFunc, NULL, NULL};
 
 struct MUI_Command rexxCommands[] =
 {
@@ -166,6 +172,25 @@ ULONG arexxDelay(register __a2 Object *obj, register __a1 char **msg)
 }
 
 /*-----------------------------------------------------------------------------
+- ButtonFunc()
+- Function for Button-Hook
+------------------------------------------------------------------------------*/
+ULONG ButtonFunc(register __a2 Object *obj, register __a1 int *msg)
+{
+	switch (*msg)
+	{
+		case ID_BT0:
+			printf("Button 0\n");
+			break;
+		case ID_BT1:
+			printf("Button 1\n");
+			break;
+	}
+
+	return 0;
+}
+
+/*-----------------------------------------------------------------------------
 - main()
 ------------------------------------------------------------------------------*/
 int main(int argc, char *argv[])
@@ -202,11 +227,13 @@ int main(int argc, char *argv[])
 	{
 		switch (DoMethod(App->App, MUIM_Application_Input, &signal))
 		{
+			// Window close
 			case MUIV_Application_ReturnID_Quit:
 				if ((MUI_RequestA(App->App, 0, 0, "Quit?", "_Yes|_No", "\33cAre you sure?", 0)) == 1)
 					running = FALSE;
 				break;
 
+			// Simple Arexx-Message (without Parameters)
 			case ID_ARexx:
 				DisplayBeep(NULL);
 				printf("A simple ARexx-Command \"test\" received\n");
@@ -282,8 +309,13 @@ struct ObjApp *CreateApp(void)
 		MUIA_Text_SetMin, 	TRUE,
 	End;
 
+	ObjectApp->BT_label_0 = SimpleButton("Button 0");
+	ObjectApp->BT_label_1 = SimpleButton("Button 1");
+
 	GROUP_ROOT_0 = GroupObject,
 		Child, ObjectApp->TX_label_0,
+		Child, ObjectApp->BT_label_0,
+		Child, ObjectApp->BT_label_1,
 	End;
 
 	ObjectApp->WI_label_0 = WindowObject,
@@ -313,6 +345,10 @@ struct ObjApp *CreateApp(void)
 
 	// Window-Close-Method
 	DoMethod(ObjectApp->WI_label_0, MUIM_Notify, MUIA_Window_CloseRequest, TRUE, ObjectApp->App, 2, MUIM_Application_ReturnID, MUIV_Application_ReturnID_Quit);
+
+	// Hook-Function for Buttons
+	DoMethod(ObjectApp->BT_label_0, MUIM_Notify, MUIA_Pressed, FALSE, MUIV_Notify_Self, 3, MUIM_CallHook, &hook_button, ID_BT0);
+	DoMethod(ObjectApp->BT_label_1, MUIM_Notify, MUIA_Pressed, FALSE, MUIV_Notify_Self, 3, MUIM_CallHook, &hook_button, ID_BT1);
 
 	// Window open
 	set(ObjectApp->WI_label_0, MUIA_Window_Open, TRUE);
