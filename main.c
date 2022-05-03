@@ -49,13 +49,14 @@ void DisposeApp(struct ObjApp *ObjectApp);
 
 enum ID {ID_ARexx = 1};
 enum BUTID {ID_BT0, ID_BT1};
-enum MENUID {ID_MN_NEW, ID_MN_LOAD};
+enum MENUID {ID_MN_NEW, ID_MN_LOAD, ID_MN_CSON, ID_MN_CSOFF};
 
 struct ObjApp
 {
 	APTR	App;
 	APTR	WI_label_0;
 	APTR	MN_label_0;
+	APTR	MN_CS_ON, MN_CS_OFF;
 	APTR	TX_label_0;
 	APTR	BT_label_0;
 	APTR	BT_label_1;
@@ -91,6 +92,7 @@ struct MUI_Command rexxCommands[] =
 	{NULL,		NULL, 			NULL,		NULL}
 };
 
+BOOL clearScreen = TRUE;
 /******************************************************************************
 * Main-Program
 *******************************************************************************/
@@ -207,6 +209,16 @@ ULONG MenuFunc(register __a2 Object *obj, register __a1 int *msg)
 			break;
 		case ID_MN_LOAD:
 			printf("Menu: Load\n");
+			break;
+		case ID_MN_CSON:
+			clearScreen = TRUE;
+			set(App->MN_CS_ON, MUIA_Menuitem_Checked, TRUE);
+			set(App->MN_CS_OFF, MUIA_Menuitem_Checked, FALSE);
+			break;
+		case ID_MN_CSOFF:
+			clearScreen = FALSE;
+			set(App->MN_CS_ON, MUIA_Menuitem_Checked, FALSE);
+			set(App->MN_CS_OFF, MUIA_Menuitem_Checked, TRUE);
 			break;
 	}
 
@@ -432,13 +444,18 @@ struct ObjApp *CreateApp(void)
 
 	MNlabel0On = MenuitemObject,
 		MUIA_Menuitem_Title, "On",
-		MUIA_Menuitem_Toggle, TRUE,
+		MUIA_Menuitem_Checkit, TRUE,
+		MUIA_Menuitem_Checked, TRUE,
 	End;
+
+	ObjectApp->MN_CS_ON = MNlabel0On;
 
 	MNlabel0Off = MenuitemObject,
 		MUIA_Menuitem_Title, "Off",
-		MUIA_Menuitem_Toggle, TRUE,
+		MUIA_Menuitem_Checkit, TRUE,
 	End;
+
+	ObjectApp->MN_CS_OFF = MNlabel0Off;
 
 	MNlabel0ClearScreen = MenuitemObject,
 		MUIA_Menuitem_Title, "Clear Screen",
@@ -489,6 +506,8 @@ struct ObjApp *CreateApp(void)
 	// Hook-Methods for Menu
 	DoMethod(MNlabel0New, MUIM_Notify, MUIA_Menuitem_Trigger, MUIV_EveryTime, ObjectApp->App, 3, MUIM_CallHook, &hook_menu, ID_MN_NEW);
 	DoMethod(MNlabel0Load, MUIM_Notify, MUIA_Menuitem_Trigger, MUIV_EveryTime, ObjectApp->App, 3, MUIM_CallHook, &hook_menu, ID_MN_LOAD);
+	DoMethod(MNlabel0On, MUIM_Notify, MUIA_Menuitem_Trigger, MUIV_EveryTime, ObjectApp->App, 3, MUIM_CallHook, &hook_menu, ID_MN_CSON);
+	DoMethod(MNlabel0Off, MUIM_Notify, MUIA_Menuitem_Trigger, MUIV_EveryTime, ObjectApp->App, 3, MUIM_CallHook, &hook_menu, ID_MN_CSOFF);
 
 	// Window open
 	set(ObjectApp->WI_label_0, MUIA_Window_Open, TRUE);
