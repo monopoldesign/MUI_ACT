@@ -69,19 +69,18 @@ struct Library *CxBase;
 
 char buffer[40];
 struct ObjApp *App = NULL;
-struct Hook hotkey_hook = {{NULL, NULL}, (HOOKFUNC)HotKeyFunc, NULL, NULL};
 
 CxObj *broker, *filter, *sender, *translate;
 struct MsgPort *broker_mp;
 
+struct Hook hotkey_hook = {{NULL, NULL}, (HOOKFUNC)HotKeyFunc, NULL, NULL};
 struct Hook hook_fname = {{NULL, NULL}, (HOOKFUNC)arexxFName, NULL, NULL};
 struct Hook hook_delay = {{NULL, NULL}, (HOOKFUNC)arexxDelay, NULL, NULL};
-
 struct Hook hook_button = {{NULL, NULL}, (HOOKFUNC)ButtonFunc, NULL, NULL};
 
 struct MUI_Command rexxCommands[] =
 {
-	{"test",	MC_TEMPLATE_ID,	ID_ARexx,	NULL},
+	{"test",	MC_TEMPLATE_ID,	ID_ARexx,	NULL},			// Simple ARexx-Command without Parameters
 	{"fname",	"NAME/A",		1,			&hook_fname},
 	{"delay",	"DELAY/A",		1,			&hook_delay},
 	{NULL,		NULL, 			NULL,		NULL}
@@ -330,7 +329,7 @@ struct ObjApp *CreateApp(void)
 		MUIA_Application_Base,			"MUIACT",	// Arexx-Port: "MUIACT.1"
 		MUIA_Application_Title,			"MUI-ACT",
 		MUIA_Application_Version,		"$VER: MUI-ACT V0.1",
-		MUIA_Application_Copyright,		"(C)2022 M.Volkel)",
+		MUIA_Application_Copyright,		"(C)2022 M.Volkel",
 		MUIA_Application_Description,	"Testing MUI-ARexx/Commodity-Functions",
 		MUIA_Application_BrokerHook,	&hotkey_hook,
 		MUIA_Application_Commands,		&rexxCommands,
