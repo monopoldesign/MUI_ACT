@@ -214,11 +214,13 @@ ULONG MenuFunc(register __a2 Object *obj, register __a1 int *msg)
 			clearScreen = TRUE;
 			set(App->MN_CS_ON, MUIA_Menuitem_Checked, TRUE);
 			set(App->MN_CS_OFF, MUIA_Menuitem_Checked, FALSE);
+			printf("ClearScreen On\n");
 			break;
 		case ID_MN_CSOFF:
 			clearScreen = FALSE;
 			set(App->MN_CS_ON, MUIA_Menuitem_Checked, FALSE);
 			set(App->MN_CS_OFF, MUIA_Menuitem_Checked, TRUE);
+			printf("ClearScreen Off\n");
 			break;
 	}
 
