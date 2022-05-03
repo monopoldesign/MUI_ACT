@@ -20,6 +20,7 @@
 #include <stdlib.h>
 
 #include <exec/memory.h>
+#include <libraries/gadtools.h>
 #include <libraries/mui.h>
 #include <proto/exec.h>
 
@@ -34,6 +35,7 @@ ULONG HotKeyFunc(register __a0 struct Hook *hook, register __a2 Object *obj, reg
 ULONG arexxFName(register __a2 Object *obj, register __a1  char **msg);
 ULONG arexxDelay(register __a2 Object *obj, register __a1 char **msg);
 ULONG ButtonFunc(register __a2 Object *obj, register __a1 int *msg);
+ULONG MenuFunc(register __a2 Object *obj, register __a1 int *msg);
 
 void init(void);
 void end(void);
@@ -47,11 +49,13 @@ void DisposeApp(struct ObjApp *ObjectApp);
 
 enum ID {ID_ARexx = 1};
 enum BUTID {ID_BT0, ID_BT1};
+enum MENUID {ID_MN_NEW, ID_MN_LOAD};
 
 struct ObjApp
 {
 	APTR	App;
 	APTR	WI_label_0;
+	APTR	MN_label_0;
 	APTR	TX_label_0;
 	APTR	BT_label_0;
 	APTR	BT_label_1;
@@ -77,6 +81,7 @@ struct Hook hotkey_hook = {{NULL, NULL}, (HOOKFUNC)HotKeyFunc, NULL, NULL};
 struct Hook hook_fname = {{NULL, NULL}, (HOOKFUNC)arexxFName, NULL, NULL};
 struct Hook hook_delay = {{NULL, NULL}, (HOOKFUNC)arexxDelay, NULL, NULL};
 struct Hook hook_button = {{NULL, NULL}, (HOOKFUNC)ButtonFunc, NULL, NULL};
+struct Hook hook_menu = {{NULL, NULL}, (HOOKFUNC)MenuFunc, NULL, NULL};
 
 struct MUI_Command rexxCommands[] =
 {
@@ -190,6 +195,25 @@ ULONG ButtonFunc(register __a2 Object *obj, register __a1 int *msg)
 }
 
 /*-----------------------------------------------------------------------------
+- MenuFunc()
+- Function for Menu-Hook
+------------------------------------------------------------------------------*/
+ULONG MenuFunc(register __a2 Object *obj, register __a1 int *msg)
+{
+	switch (*msg)
+	{
+		case ID_MN_NEW:
+			printf("Menu: New\n");
+			break;
+		case ID_MN_LOAD:
+			printf("Menu: Load\n");
+			break;
+	}
+
+	return 0;
+}
+
+/*-----------------------------------------------------------------------------
 - main()
 ------------------------------------------------------------------------------*/
 int main(int argc, char *argv[])
@@ -294,6 +318,13 @@ void end(void)
 struct ObjApp *CreateApp(void)
 {
 	struct ObjApp * ObjectApp;
+
+	APTR MNlabel0Project, MNlabel0New, MNlabel0BarLabel0, MNlabel0Load, MNlabel0Save;
+	APTR MNlabel0SaveAa, MNlabel0Transfer, MNlabel0BarLabel1, MNlabel0About;
+	APTR MNlabel0BarLabel2, MNlabel0Hide, MNlabel0Quit, MNlabel0Item, MNlabel0Init;
+	APTR MNlabel0Copy, MNlabel0Paste, MNlabel0BarLabel3, MNlabel0ClearScreen;
+	APTR MNlabel0On, MNlabel0Off;
+
 	APTR GROUP_ROOT_0;
 	
 	if (!(ObjectApp = AllocVec(sizeof(struct ObjApp),MEMF_CLEAR)))
@@ -324,6 +355,111 @@ struct ObjApp *CreateApp(void)
 		WindowContents, 		GROUP_ROOT_0,
 	End;
 
+	MNlabel0New = MenuitemObject,
+		MUIA_Menuitem_Title, "New",
+		MUIA_Menuitem_Shortcut, "N",
+	End;
+
+	MNlabel0BarLabel0 = MUI_MakeObject(MUIO_Menuitem, NM_BARLABEL, 0, 0, 0);
+
+	MNlabel0Load = MenuitemObject,
+		MUIA_Menuitem_Title, "Load...",
+		MUIA_Menuitem_Shortcut, "O",
+	End;
+
+	MNlabel0Save = MenuitemObject,
+		MUIA_Menuitem_Title, "Save",
+		MUIA_Menuitem_Shortcut, "S",
+	End;
+
+	MNlabel0SaveAa = MenuitemObject,
+		MUIA_Menuitem_Title, "Save Aa...",
+		MUIA_Menuitem_Shortcut, "A",
+	End;
+
+	MNlabel0Transfer = MenuitemObject,
+		MUIA_Menuitem_Title, "Transfer",
+	End;
+
+	MNlabel0BarLabel1 = MUI_MakeObject(MUIO_Menuitem, NM_BARLABEL, 0, 0, 0);
+
+	MNlabel0About = MenuitemObject,
+		MUIA_Menuitem_Title, "About...",
+	End;
+
+	MNlabel0BarLabel2 = MUI_MakeObject(MUIO_Menuitem, NM_BARLABEL, 0, 0, 0);
+
+	MNlabel0Hide = MenuitemObject,
+		MUIA_Menuitem_Title, "Hide",
+		MUIA_Menuitem_Shortcut, "L",
+	End;
+
+	MNlabel0Quit = MenuitemObject,
+		MUIA_Menuitem_Title, "Quit",
+		MUIA_Menuitem_Shortcut, "Q",
+	End;
+
+	MNlabel0Project = MenuitemObject,
+		MUIA_Menuitem_Title, "Project",
+		MUIA_Family_Child, MNlabel0New,
+		MUIA_Family_Child, MNlabel0BarLabel0,
+		MUIA_Family_Child, MNlabel0Load,
+		MUIA_Family_Child, MNlabel0Save,
+		MUIA_Family_Child, MNlabel0SaveAa,
+		MUIA_Family_Child, MNlabel0Transfer,
+		MUIA_Family_Child, MNlabel0BarLabel1,
+		MUIA_Family_Child, MNlabel0About,
+		MUIA_Family_Child, MNlabel0BarLabel2,
+		MUIA_Family_Child, MNlabel0Hide,
+		MUIA_Family_Child, MNlabel0Quit,
+	End;
+
+	MNlabel0Init = MenuitemObject,
+		MUIA_Menuitem_Title, "Init",
+	End;
+
+	MNlabel0Copy = MenuitemObject,
+		MUIA_Menuitem_Title, "Copy",
+		MUIA_Menuitem_Shortcut, "C",
+	End;
+
+	MNlabel0Paste = MenuitemObject,
+		MUIA_Menuitem_Title, "Paste",
+		MUIA_Menuitem_Shortcut, "V",
+	End;
+
+	MNlabel0BarLabel3 = MUI_MakeObject(MUIO_Menuitem, NM_BARLABEL, 0, 0, 0);
+
+	MNlabel0On = MenuitemObject,
+		MUIA_Menuitem_Title, "On",
+		MUIA_Menuitem_Toggle, TRUE,
+	End;
+
+	MNlabel0Off = MenuitemObject,
+		MUIA_Menuitem_Title, "Off",
+		MUIA_Menuitem_Toggle, TRUE,
+	End;
+
+	MNlabel0ClearScreen = MenuitemObject,
+		MUIA_Menuitem_Title, "Clear Screen",
+		MUIA_Family_Child, MNlabel0On,
+		MUIA_Family_Child, MNlabel0Off,
+	End;
+
+	MNlabel0Item = MenuitemObject,
+		MUIA_Menuitem_Title, "Item",
+		MUIA_Family_Child, MNlabel0Init,
+		MUIA_Family_Child, MNlabel0Copy,
+		MUIA_Family_Child, MNlabel0Paste,
+		MUIA_Family_Child, MNlabel0BarLabel3,
+		MUIA_Family_Child, MNlabel0ClearScreen,
+	End;
+
+	ObjectApp->MN_label_0 = MenustripObject,
+		MUIA_Family_Child, MNlabel0Project,
+		MUIA_Family_Child, MNlabel0Item,
+	End;
+
 	ObjectApp->App = ApplicationObject,
 		MUIA_Application_Author,		"M.Volkel",
 		MUIA_Application_Base,			"MUIACT",	// Arexx-Port: "MUIACT.1"
@@ -331,6 +467,7 @@ struct ObjApp *CreateApp(void)
 		MUIA_Application_Version,		"$VER: MUI-ACT V0.1",
 		MUIA_Application_Copyright,		"(C)2022 M.Volkel",
 		MUIA_Application_Description,	"Testing MUI-ARexx/Commodity-Functions",
+		MUIA_Application_Menustrip,		ObjectApp->MN_label_0,
 		MUIA_Application_BrokerHook,	&hotkey_hook,
 		MUIA_Application_Commands,		&rexxCommands,
 		SubWindow,						ObjectApp->WI_label_0,
@@ -345,9 +482,13 @@ struct ObjApp *CreateApp(void)
 	// Window-Close-Method
 	DoMethod(ObjectApp->WI_label_0, MUIM_Notify, MUIA_Window_CloseRequest, TRUE, ObjectApp->App, 2, MUIM_Application_ReturnID, MUIV_Application_ReturnID_Quit);
 
-	// Hook-Function for Buttons
+	// Hook-Methods for Buttons
 	DoMethod(ObjectApp->BT_label_0, MUIM_Notify, MUIA_Pressed, FALSE, MUIV_Notify_Self, 3, MUIM_CallHook, &hook_button, ID_BT0);
 	DoMethod(ObjectApp->BT_label_1, MUIM_Notify, MUIA_Pressed, FALSE, MUIV_Notify_Self, 3, MUIM_CallHook, &hook_button, ID_BT1);
+
+	// Hook-Methods for Menu
+	DoMethod(MNlabel0New, MUIM_Notify, MUIA_Menuitem_Trigger, MUIV_EveryTime, ObjectApp->App, 3, MUIM_CallHook, &hook_menu, ID_MN_NEW);
+	DoMethod(MNlabel0Load, MUIM_Notify, MUIA_Menuitem_Trigger, MUIV_EveryTime, ObjectApp->App, 3, MUIM_CallHook, &hook_menu, ID_MN_LOAD);
 
 	// Window open
 	set(ObjectApp->WI_label_0, MUIA_Window_Open, TRUE);
