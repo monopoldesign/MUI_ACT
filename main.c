@@ -29,13 +29,19 @@
 #include <pragma/rexxsyslib_lib.h>
 
 /******************************************************************************
+* Macros
+*******************************************************************************/
+#define HOOKPROTONH(name, ret, obj, param) ret name(register __a2 obj, register __a1 param)
+#define MakeHook(hookName, hookFunc) struct Hook hookName = {{NULL, NULL}, (HOOKFUNC)hookFunc, NULL, NULL}
+
+/******************************************************************************
 * Prototypes
 *******************************************************************************/
-ULONG HotKeyFunc(register __a0 struct Hook *hook, register __a2 Object *obj, register __a1 CxMsg *cmsg);
-ULONG arexxFName(register __a2 Object *obj, register __a1  char **msg);
-ULONG arexxDelay(register __a2 Object *obj, register __a1 char **msg);
-ULONG ButtonFunc(register __a2 Object *obj, register __a1 int *msg);
-ULONG MenuFunc(register __a2 Object *obj, register __a1 int *msg);
+HOOKPROTONH(HotKeyFunc, ULONG, Object *obj, CxMsg *cmsg);
+HOOKPROTONH(arexxFName, ULONG, Object *obj, char **msg);
+HOOKPROTONH(arexxDelay, ULONG, Object *obj, char **msg);
+HOOKPROTONH(ButtonFunc, ULONG, Object *obj, int *msg);
+HOOKPROTONH(MenuFunc, ULONG, Object *obj, int *msg);
 
 void init(void);
 void end(void);
@@ -47,7 +53,7 @@ void DisposeApp(struct ObjApp *ObjectApp);
 *******************************************************************************/
 #define MAKE_ID(a, b, c, d) ((ULONG)(a) << 24 | (ULONG)(b) << 16 | (ULONG)(c) << 8 | (ULONG)(d))
 
-enum ID {ID_ARexx = 1};
+#define ID_ARexx 1
 enum BUTID {ID_BT0, ID_BT1};
 enum MENUID {ID_MN_NEW, ID_MN_LOAD, ID_MN_CSON, ID_MN_CSOFF};
 
@@ -72,17 +78,17 @@ struct IntuitionBase *IntuitionBase;
 struct Library *MUIMasterBase;
 struct Library *CxBase;
 
+MakeHook(hook_hotkey, HotKeyFunc);
+MakeHook(hook_fname, arexxFName);
+MakeHook(hook_delay, arexxDelay);
+MakeHook(hook_button, ButtonFunc);
+MakeHook(hook_menu, MenuFunc);
+
 char buffer[40];
 struct ObjApp *App = NULL;
 
 CxObj *broker, *filter, *sender, *translate;
 struct MsgPort *broker_mp;
-
-struct Hook hotkey_hook = {{NULL, NULL}, (HOOKFUNC)HotKeyFunc, NULL, NULL};
-struct Hook hook_fname = {{NULL, NULL}, (HOOKFUNC)arexxFName, NULL, NULL};
-struct Hook hook_delay = {{NULL, NULL}, (HOOKFUNC)arexxDelay, NULL, NULL};
-struct Hook hook_button = {{NULL, NULL}, (HOOKFUNC)ButtonFunc, NULL, NULL};
-struct Hook hook_menu = {{NULL, NULL}, (HOOKFUNC)MenuFunc, NULL, NULL};
 
 struct MUI_Command rexxCommands[] =
 {
@@ -101,7 +107,7 @@ BOOL clearScreen = TRUE;
 - HotKeyFunc()
 - Function for Hotkey-Commodity-Hook
 ------------------------------------------------------------------------------*/
-ULONG HotKeyFunc(register __a0 struct Hook *hook, register __a2 Object *obj, register __a1 CxMsg *cmsg)
+HOOKPROTONH(HotKeyFunc, ULONG, Object *obj, CxMsg *cmsg)
 {
 	ULONG cmsgid, cmsgtype;
 
@@ -153,7 +159,7 @@ ULONG HotKeyFunc(register __a0 struct Hook *hook, register __a2 Object *obj, reg
 - arexxFName()
 - Function for "fname"-ARexx-Hook
 ------------------------------------------------------------------------------*/
-ULONG arexxFName(register __a2 Object *obj, register __a1 char **msg)
+HOOKPROTONH(arexxFName, ULONG, Object *obj, char **msg)
 {
 	char *data = (char *)msg[0];
 
@@ -167,7 +173,7 @@ ULONG arexxFName(register __a2 Object *obj, register __a1 char **msg)
 - arexxDelay()
 - Function for "delay"-ARexx-Hook
 ------------------------------------------------------------------------------*/
-ULONG arexxDelay(register __a2 Object *obj, register __a1 char **msg)
+HOOKPROTONH(arexxDelay, ULONG, Object *obj, char **msg)
 {
 	unsigned int ndata = (unsigned int)atoi(msg[0]);
 
@@ -181,7 +187,7 @@ ULONG arexxDelay(register __a2 Object *obj, register __a1 char **msg)
 - ButtonFunc()
 - Function for Button-Hook
 ------------------------------------------------------------------------------*/
-ULONG ButtonFunc(register __a2 Object *obj, register __a1 int *msg)
+HOOKPROTONH(ButtonFunc, ULONG, Object *obj, int *msg)
 {
 	switch (*msg)
 	{
@@ -200,7 +206,7 @@ ULONG ButtonFunc(register __a2 Object *obj, register __a1 int *msg)
 - MenuFunc()
 - Function for Menu-Hook
 ------------------------------------------------------------------------------*/
-ULONG MenuFunc(register __a2 Object *obj, register __a1 int *msg)
+HOOKPROTONH(MenuFunc, ULONG, Object *obj, int *msg)
 {
 	switch (*msg)
 	{
@@ -487,7 +493,7 @@ struct ObjApp *CreateApp(void)
 		MUIA_Application_Copyright,		"(C)2022 M.Volkel",
 		MUIA_Application_Description,	"Testing MUI-ARexx/Commodity-Functions",
 		MUIA_Application_Menustrip,		ObjectApp->MN_label_0,
-		MUIA_Application_BrokerHook,	&hotkey_hook,
+		MUIA_Application_BrokerHook,	&hook_hotkey,
 		MUIA_Application_Commands,		&rexxCommands,
 		SubWindow,						ObjectApp->WI_label_0,
 	End;
