@@ -26,7 +26,6 @@
 
 #include <pragma/muimaster_lib.h>
 #include <pragma/commodities_lib.h>
-#include <pragma/rexxsyslib_lib.h>
 
 /******************************************************************************
 * Macros
